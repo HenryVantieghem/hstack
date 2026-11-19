@@ -1,6 +1,8 @@
 ---
 name: voice-agent-eu
-description: Design, build and pilot a European voice agent with explicit processing boundaries, self-hosted LiveKit, regional speech and model deployments, and a tested SIP route.
+description: Build a business phone receptionist or multilingual voice agent for the EU, including Belgian, Dutch and French callers. Choose where recordings, transcripts, speech and model processing run. Test a SIP handoff with a regional deployment.
+metadata:
+  related: "voice-agent-us"
 ---
 
 # Build an EU voice agent

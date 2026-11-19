@@ -1,6 +1,8 @@
 ---
 name: voice-agent-us
-description: Build and pilot a US phone agent on Retell, from storage and call-direction discovery to a verified human transfer and rollback.
+description: Build an inbound or outbound US business phone agent, such as an after-hours American HVAC receptionist on Retell. Choose where call data lives, then test a human transfer, failure handling and rollback.
+metadata:
+  related: "voice-agent-eu"
 ---
 
 # Build a US voice agent

@@ -1,44 +1,68 @@
 # hstack
 
-Four agent skills from Henry Vantieghem for the work around shipping software: keeping a Mac ready to build, keeping promises to clients, and getting a business voice agent through its first useful call.
+Tell your coding agent what you want to get done. **meta-h** finds the right skill or command, reads its instructions and gets to work. **su-meta-h** maintains its private local catalog and remembers the routes you teach it. The first four specialists cover Mac maintenance, client commitments, and business voice agents in the US and EU.
 
-[Watch the 58-second launch film (MP4)](https://github.com/HenryVantieghem/hstack/releases/download/v0.1.0/hstack-launch.mp4)
+[Watch the routing demo (MP4)](https://github.com/HenryVantieghem/hstack/releases/download/v0.2.0/hstack-routing.mp4) · [Watch the original Mac demo (MP4)](https://github.com/HenryVantieghem/hstack/releases/download/v0.1.0/hstack-launch.mp4)
 
-## Start with your Mac
+## Install the router in a project
 
-From the project where you want to use the skill, run:
+Start in the project where you use Codex or Claude Code. You need Git, Node with npx, and Python 3.9 or later. The commands below use a personal library directory outside your agent's automatic skill folders. If you already cloned hstack, use that checkout for `library` and skip the clone.
 
 ```sh
-npx skills add HenryVantieghem/hstack --skill mac-maintainer --agent claude-code codex -y
+library="$HOME/.local/share/hstack"
+git clone https://github.com/HenryVantieghem/hstack.git "$library"
+npx skills add "$library" --skill meta-h su-meta-h --agent claude-code codex -y
+python3 .agents/skills/meta-h/scripts/catalog.py sync --root "$library/skills"
 ```
 
-Start a fresh Claude Code or Codex session in that project and ask:
+In a fresh Codex session in that project, ask:
 
-> Use mac-maintainer. I’m about to start a large build. Check this Mac and tell me whether I should start now and why.
+> $meta-h My Mac slowed down before a large build. Check whether I can start it.
 
-You get a read-only check of the machine you’re actually using. If the evidence points to a problem, the skill explains what to inspect next. The Mac check runs locally with system tools and needs no vendor account.
+Or in Claude Code:
 
-## Pick a skill
+> /meta-h Build a French and Dutch phone receptionist for a Belgian warehouse. Ask me where call data can go.
 
-| Skill | Try asking |
+For a personal shortcut, tell the same router:
+
+> $meta-h In this project, teach the router that “opening shift” means work-chief-of-staff.
+
+Use `$su-meta-h` directly when you want to inspect the catalog, refresh it after installs, or remove a learned route. If no local skill fits, the router turns to **find-skills**. Add it once if your host doesn't already have it:
+
+```sh
+npx skills add vercel-labs/skills --skill find-skills --agent claude-code codex -y
+python3 .agents/skills/meta-h/scripts/catalog.py sync
+```
+
+## What enters the conversation?
+
+The SQLite catalog lives on your machine and is scoped to your project. It indexes skill descriptions, local commands and their relationships. A search returns a shortlist. The router opens one selected file on demand. Learned phrases point to a particular skill in that project. The catalog does not need an account, embedding service or database server.
+
+The install above registers just the two routing skills from hstack with your host. The four bundled specialists stay in the library. Codex and Claude Code can still advertise descriptions for skills already installed in their own discovery folders. Your existing installations and the host's context policy determine those costs. Plugin skills exposed only by a running host can also be selected from its advertised inventory.
+
+To see exactly what the router sees, run these from the project directory:
+
+```sh
+catalog=.agents/skills/meta-h/scripts/catalog.py
+python3 "$catalog" status
+python3 "$catalog" search "Belgian warehouse phone receptionist" --limit 3
+```
+
+To open one result, run `python3 "$catalog" show ID` with the exact ID printed by search. An external library remains registered across refreshes. Run `python3 "$catalog" sync --forget-root "$library/skills"` to remove that library from this project's index.
+
+## Skills
+
+| Skill | When to use it |
 | --- | --- |
-| [mac-maintainer](skills/mac-maintainer/SKILL.md) | “My build slowed down. Check disk space and memory pressure before I restart anything.” |
-| [work-chief-of-staff](skills/work-chief-of-staff/SKILL.md) | “Using this project board and these meeting notes, what did I promise, what’s due first, and which decision needs me?” |
-| [voice-agent-us](skills/voice-agent-us/SKILL.md) | “Build an after-hours receptionist for a US HVAC company using Retell. Ask me where call data belongs, then test what happens when dispatch doesn’t pick up.” |
-| [voice-agent-eu](skills/voice-agent-eu/SKILL.md) | “Build a French and Dutch dispatch line for a Belgian warehouse. Ask whether EU storage is enough or whether speech and model processing must also stay in the EU.” |
+| [meta-h](skills/meta-h/SKILL.md) | Give it a task. It selects an available specialist or command, opens the instructions, and carries the task through. |
+| [su-meta-h](skills/su-meta-h/SKILL.md) | Set up the router, add or remove a library, or teach it what a phrase means in a specific project. |
+| [mac-maintainer](skills/mac-maintainer/SKILL.md) | Check the actual Mac's disk, memory pressure and build readiness. The read-only snapshot uses stock macOS tools. |
+| [work-chief-of-staff](skills/work-chief-of-staff/SKILL.md) | Find promises in a board and meeting notes. Identify the next deliverable, its owner and the decision holding it up. |
+| [voice-agent-us](skills/voice-agent-us/SKILL.md) | Build an American after-hours receptionist with Retell. Choose storage, a human fallback, and a test for an unanswered transfer. |
+| [voice-agent-eu](skills/voice-agent-eu/SKILL.md) | Build a multilingual European switchboard. Establish where audio, transcripts and model inference can go, then test the carrier and human handoff. |
 
-To install all four into your current project:
-
-```sh
-npx skills add HenryVantieghem/hstack --skill '*' --agent claude-code codex -y
-```
-
-In Claude Code, select a skill with `/mac-maintainer`. In Codex, use `$mac-maintainer`. Substitute any installed skill name from the table. Install the Mac skill on macOS. The other three can be used from any supported development machine.
-
-## What the voice skills ask first
-
-“Where should we store the data?” is really several questions. A warehouse might allow a dispatch ticket in its CRM, want the recording discarded, and require every word spoken on the call to be processed in Europe. Those choices change the phone carrier, speech service, model, logs and fallback route. Start with a fictional caller and a test number. Prove a human can receive the handoff and that the promised record exists before connecting a business line.
+If you want all six to appear individually in your host's skill picker, run `npx skills add HenryVantieghem/hstack --skill '*' --agent claude-code codex -y` in the project. Direct invocations use `$mac-maintainer` in Codex or `/mac-maintainer` in Claude Code.
 
 ## License
 
-[MIT](LICENSE). Use these in your own projects or adapt them for your team.
+[MIT](LICENSE).
