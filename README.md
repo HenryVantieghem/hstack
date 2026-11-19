@@ -2,6 +2,8 @@
 
 Four agent skills from Henry Vantieghem for the work around shipping software: keeping a Mac ready to build, keeping promises to clients, and getting a business voice agent through its first useful call.
 
+[Watch the 58-second launch film (MP4)](https://github.com/HenryVantieghem/hstack/releases/download/v0.1.0/hstack-launch.mp4)
+
 ## Start with your Mac
 
 From the project where you want to use the skill, run:
