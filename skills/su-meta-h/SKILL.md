@@ -38,6 +38,8 @@ python3 "$catalog" search "inbound phone"
 python3 "$catalog" sync --forget-root /path/to/approved-specialists
 ```
 
+For host plugins, get the enabled packages and their active skill directories from the running host or its documented plugin inventory. Register those specific directories. On an upgrade, verify the replacement before forgetting the previous version. A downloaded plugin cache can contain disabled or older versions.
+
 Adding a root persists it across refreshes. Use `sync --forget-root` only when asked to remove that root from future scans. The skill files stay in place. Check `status` after either change. For taught phrases, use the scoped `alias add`, `alias list` and `alias remove` commands. Verify the selected skill's identifier with `show` before adding a rule and search the phrase after the change. The example below assumes the current project and an exact identifier obtained from the catalog. Select another project by placing `--project DIR` before the subcommand.
 
 ```sh

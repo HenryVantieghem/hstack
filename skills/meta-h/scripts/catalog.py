@@ -120,8 +120,8 @@ def context(args):
     project = Path(args.project).expanduser().resolve(strict=True) if args.project else project_for(Path.cwd().resolve(), home)
     if not project.is_dir():
         raise ValueError("--project must be a directory")
-    roots = root_specs(project, home, args.root)
-    scope_key = [str(project), [(source, kind, str(path)) for source, kind, path in roots if source != "explicit"]]
+    roots = root_specs(project, home, ())
+    scope_key = [str(project), [(source, kind, str(path)) for source, kind, path in roots]]
     scope = hashlib.sha256(json.dumps(scope_key).encode()).hexdigest()
     cache = config_root("XDG_CACHE_HOME", home / ".cache")
     db = absolute(args.db) if args.db else cache / "hstack" / "catalog" / (scope[:24] + ".sqlite3")
@@ -203,17 +203,36 @@ def frontmatter(text):
     return {key: yaml_values(raw, continuation) for key, raw, continuation, _ in pairs}
 
 
-def read_text(path, size):
+def open_markdown(path):
     flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
     fd = os.open(path, flags)
-    with os.fdopen(fd, "rb") as stream:
-        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
-            raise ValueError("Expected a regular Markdown file")
-        return stream.read(size).decode("utf-8", errors="replace")
+    stream = os.fdopen(fd, "rb")
+    if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+        stream.close()
+        raise ValueError("Expected a regular Markdown file")
+    return stream
+
+
+def read_header(path):
+    with open_markdown(path) as stream:
+        first = stream.readline(MAX_HEADER)
+        if first.decode("utf-8-sig", errors="replace").strip() != "---":
+            return ""
+        remaining = MAX_HEADER - len(first)
+        lines = [first]
+        while remaining > 0:
+            line = stream.readline(remaining)
+            if not line:
+                break
+            lines.append(line)
+            remaining -= len(line)
+            if line.rstrip(b"\r\n") in (b"---", b"..."):
+                return b"".join(lines).decode("utf-8", errors="replace")
+    return ""
 
 
 def entry_for(path, target, kind, source, root):
-    metadata = frontmatter(read_text(target, MAX_HEADER))
+    metadata = frontmatter(read_header(target))
     if kind == "skill":
         fallback = path.parent.name
     else:
@@ -409,11 +428,13 @@ def show(row, project, roots):
         raise ValueError("Skill path changed. Run sync before opening it.")
     if not permitted(target, project, approved_roots(roots)):
         raise ValueError("Skill path is outside the active scope. Run sync before opening it.")
-    body = read_text(target, MAX_BODY + 1)
+    with open_markdown(target) as stream:
+        data = stream.read(MAX_BODY + 1)
+    body = data[:MAX_BODY].decode("utf-8", errors="replace")
     # Preserve Markdown whitespace while removing terminal control characters.
     body = "".join(char for char in body if char.isprintable() or char in "\n\r\t")
-    print(body[:MAX_BODY], end="" if body[:MAX_BODY].endswith("\n") else "\n")
-    if target.stat().st_size > MAX_BODY:
+    print(body, end="" if body.endswith("\n") else "\n")
+    if len(data) > MAX_BODY:
         print(f"\n[Output limited to the first {MAX_BODY // 1024} KiB.]")
 
 
